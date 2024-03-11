@@ -38,7 +38,8 @@ class Option:
 
     def choose(self):
         data = self.prep_call() if self.prep_call else None
-        message = self.command.execute(data) if data else self.command.execute()
+        message = self.command.execute(
+            data) if data else self.command.execute()
         print(message)
 
     def __str__(self):
@@ -130,7 +131,8 @@ def loop():
         ),
         "B": Option("List bookmarks by date", commands.ListBookmarksCommand()),
         "T": Option(
-            "List bookmarks by title", commands.ListBookmarksCommand(order_by="title")
+            "List bookmarks by title", commands.ListBookmarksCommand(
+                order_by="title")
         ),
         "E": Option(
             "Edit a bookmark",
