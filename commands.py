@@ -10,6 +10,7 @@ import requests
 
 from database import DatabaseManager
 
+
 # module scope
 db = DatabaseManager("bookmarks.db")
 
@@ -17,7 +18,8 @@ db = DatabaseManager("bookmarks.db")
 class Command(ABC):
     @abstractmethod
     def execute(self, data):
-        raise NotImplementedError("A command must implement the execute method")
+        raise NotImplementedError(
+            "A command must implement the execute method")
 
 
 class CreateBookmarksTableCommand(Command):
@@ -84,6 +86,7 @@ class ImportGitHubStarsCommand(Command):
     """
     Import starred repos in Github - credit Dane Hillard
     """
+
     def _extract_bookmark_info(self, repo):
         return {
             "title": repo["name"],
@@ -101,7 +104,8 @@ class ImportGitHubStarsCommand(Command):
                 next_page_of_results,
                 headers={"Accept": "application/vnd.github.v3.star+json"},
             )
-            next_page_of_results = stars_response.links.get("next", {}).get("url")
+            next_page_of_results = stars_response.links.get(
+                "next", {}).get("url")
 
             for repo_info in stars_response.json():
                 repo = repo_info["repo"]
