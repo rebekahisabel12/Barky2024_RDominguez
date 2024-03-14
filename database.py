@@ -22,12 +22,13 @@ CREATE TABLE IF NOT EXISTS bookmarks
 
 import sqlite3
 
+
 class DatabaseManager:
     def __init__(self, database_filename) -> None:
         # added this to persist the name of the database file
-        self.database_filename = database_filename
+       # self.database_filename = database_filename
         self.connection = sqlite3.connect(database_filename)
-    
+
     def __del__(self):
         self.connection.close()
 
@@ -42,7 +43,7 @@ class DatabaseManager:
 
         this is designed to use placeholders in SQL statements to insert values
         '''
-        with self.connection: #https://www.pythonforbeginners.com/files/with-statement-in-python
+        with self.connection:  # https://www.pythonforbeginners.com/files/with-statement-in-python
             cursor = self.connection.cursor()
             cursor.execute(statement, values or [])
             return cursor
@@ -56,7 +57,8 @@ class DatabaseManager:
         '''
         columns_with_types = [
             f'{column_name} {data_type}'
-            for column_name, data_type in columns.items() #this loop reads all column information
+            # this loop reads all column information
+            for column_name, data_type in columns.items()
         ]
 
         self._execute(
@@ -125,7 +127,8 @@ class DatabaseManager:
             DELETE FROM {table_name}
             WHERE {delete_criteria};
             ''',
-            tuple(criteria.values()), #https://www.w3schools.com/python/python_tuples.asp
+            tuple(criteria.values()
+                  ),  # https://www.w3schools.com/python/python_tuples.asp
         )
 
     def select(self, table_name, criteria=None, order_by=None):
@@ -156,4 +159,8 @@ class DatabaseManager:
             tuple(criteria.values()),
         )
 
-
+    def update(self, table_name, criteria, data):
+        conditions = [f"{column} = ?" for column in criteria.keys()]
+        set_values = ", ".join([f"{column} = ?" for column in data.keys()])
+        query = f"UPDATE {table_name} SET {set_values} WHERE {' AND '.join(conditions)}"
+        self._execute(query, tuple(data.values()) + tuple(criteria.values()))

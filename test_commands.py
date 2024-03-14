@@ -6,7 +6,6 @@
 
 # should we test quit? No, its behavior is self-evident and not logic dependent
 
-
 def test_quit_command():
     pass
 
