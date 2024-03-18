@@ -2,96 +2,46 @@
 # that said, the database module could certain be refactored to achieve decoupling
 # in fact, either the implementation of the Unit of Work or just changing to sqlalchemy would be good.
 
-# import os
-# from datetime import datetime
-# import sqlite3
-
-# import pytest
-
-
-# from database import DatabaseManager
-
-# @pytest.fixture
-# def database_manager() -> DatabaseManager:
-#     """
-#     What is a fixture? https://docs.pytest.org/en/stable/fixture.html#what-fixtures-are
-#     """
-#     filename = "test_bookmarks.db"
-#     dbm = DatabaseManager(filename)
-#     # what is yield? https://www.guru99.com/python-yield-return-generator.html
-#     yield dbm
-#     dbm.__del__()           # explicitly release the database manager
-#     os.remove(filename)
-
-
-# def test_database_manager_create_table(database_manager):
-#     # arrange and act
-#     database_manager.create_table(
-#         "bookmarks",
-#         {
-#             "id": "integer primary key autoincrement",
-#             "title": "text not null",
-#             "url": "text not null",
-#             "notes": "text",
-#             "date_added": "text not null",
-#         },
-#     )
-
-#     #assert
-#     conn = database_manager.connection
-#     cursor = conn.cursor()
-
-#     cursor.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='bookmarks' ''')
-
-#     assert cursor.fetchone()[0] == 1
-
-#     #cleanup
-#     # this is probably not really needed
-#     database_manager.drop_table("bookmarks")
-
-
-# def test_database_manager_add_bookmark(database_manager):
-
-#     # arrange
-#     database_manager.create_table(
-#         "bookmarks",
-#         {
-#             "id": "integer primary key autoincrement",
-#             "title": "text not null",
-#             "url": "text not null",
-#             "notes": "text",
-#             "date_added": "text not null",
-#         },
-#     )
-
-#     data = {
-#         "title": "test_title",
-#         "url": "http://example.com",
-#         "notes": "test notes",
-#         "date_added": datetime.utcnow().isoformat()
-#     }
-
-#     # act
-#     database_manager.add("bookmarks", data)
-
-#     # assert
-#     conn = database_manager.connection
-#     cursor = conn.cursor()
-#     cursor.execute(''' SELECT * FROM bookmarks WHERE title='test_title' ''')
-#     assert cursor.fetchone()[0] == 1
-
 # my edits
-import unittest
-from database import add_bookmark
+import pytest
+from database import add_bookmark, Bookmark, list_bookmarks
+from unittest.mock import MagicMock, patch, call
 
 
-class TestDatabaseFunctions(unittest.TestCase):
-    def test_add_bookmark(self):
-        # Test adding a bookmark
-        add_bookmark("Example Bookmark",
-                     "https://example.com", "Example notes")
-        # Add assertions to verify the result (e.g., check if the bookmark was added successfully)
+@pytest.fixture
+def mock_session():
+    with patch('database.Session') as mock:
+        yield mock.return_value
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_add_bookmark(mock_session):
+    captured_bookmark = None
+
+    def capture_bookmark(bookmark):
+        nonlocal captured_bookmark
+        captured_bookmark = bookmark
+
+    mock_session.add.side_effect = capture_bookmark
+
+    add_bookmark("Test Title", "http://example.com", "Test Notes")
+
+    assert captured_bookmark == Bookmark(
+        title="Test Title", url="http://example.com", notes="Test Notes"
+    )
+
+
+def test_list_bookmarks(mock_session):
+
+    mock_query = mock_session.query.return_value
+
+    mock_query.order_by.return_value.all.return_value = [
+        Bookmark(id=1, title="Bookmark 1",
+                 url="http://example.com/1", notes="Notes 1"),
+        Bookmark(id=2, title="Bookmark 2",
+                 url="http://example.com/2", notes="Notes 2"),
+    ]
+
+    list_bookmarks(order_by='date_added')
+
+    mock_query.order_by.assert_called_once_with('date_added')
+    mock_query.order_by.return_value.all.assert_called_once()
