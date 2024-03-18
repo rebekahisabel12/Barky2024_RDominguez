@@ -35,18 +35,15 @@ def test_edit_bookmark_url(mock_session):
 
 
 def test_list_bookmarks_by_title(mock_session):
-    # Create a mock session and set up any necessary return values
     mock_session.query().order_by().all.return_value = [
         MagicMock(title="Bookmark A"),
         MagicMock(title="Bookmark B"),
         MagicMock(title="Bookmark C")
     ]
 
-    # Call the ListBookmarksCommand with the appropriate order_by argument
     command = ListBookmarksCommand(order_by="title")
     bookmarks = command.execute()
 
-    # Assert that the bookmarks are sorted correctly by title
     assert [bookmark.title for bookmark in bookmarks] == [
         "Bookmark A", "Bookmark B", "Bookmark C"]
 

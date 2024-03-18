@@ -25,9 +25,7 @@ class Command(ABC):
 class CreateBookmarksTableCommand(Command):
 
     def execute(self, data=None):
-        # Check if the bookmarks table already exists in metadata
         if 'bookmarks' not in Base.metadata.tables:
-            # Define the bookmarks table
             class Bookmark(Base):
                 __tablename__ = 'bookmarks'
 
@@ -37,7 +35,6 @@ class CreateBookmarksTableCommand(Command):
                 notes = Column(String)
                 date_added = Column(DateTime, default=datetime.utcnow)
 
-            # Create the table in the database
             Base.metadata.create_all(engine)
             print("Bookmarks table created successfully.")
         else:
@@ -55,16 +52,12 @@ class AddBookmarkCommand(Command):
             date_added=datetime.utcnow(),
         )
 
-        # Create a session
         session = Session()
 
-        # Add the bookmark to the session
         session.add(bookmark)
 
-        # Commit the transaction
         session.commit()
 
-        # Close the session
         session.close()
 
         return "Bookmark added!"
